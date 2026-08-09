@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>File Converter</title>
+    </head>
+    <body>
+        <input type="file" id="fileInput">
+        <p>Image dimensions: <span id="imageDimensions">0 x 0</span></p>
+        Convert to: <select id="typeSelector">
+            <option id="jpg">JPG</option>
+            <option id="png">PNG</option>
+        </select>
+        <button onclick="convert();">Convert & Download</button>
+        
+        <canvas id="canvas" style="display: none;"></canvas>
+        
+        <script>
+            const fileInput = document.querySelector("#fileInput");
+            const imageDimensions = document.querySelector("#imageDimensions");
+            const typeSelector = document.querySelector("#typeSelector");
+            
+            const canvas = document.querySelector("#canvas");
+            const ctx = canvas.getContext("2d");
+            
+            let fileName = "untitled";
+            
+            function removeExtension(filename) {
+                const lastDotIndex = filename.lastIndexOf('.');
+                if (lastDotIndex === -1) return filename; // Returns original string if no dot exists
+                return filename.substring(0, lastDotIndex);
+            }
+            
+            fileInput.addEventListener("change", function(event) {
+                const file = event.target.files[0];
+                
+                if(!file) return;
+                
+                fileName = removeExtension(file.name);
+                
+                const img = new Image();
+                
+                img.src = URL.createObjectURL(file);
+                
+                img.onload = function() {
+                    const width = this.width;
+                    const height = this.height;
+                    
+                    imageDimensions.textContent = `${width} x ${height}`;
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0);
+                };
+            });
+            
+            function convert() {
+                const fileType = typeSelector.selectedOptions[0].id;
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `${fileName}.${fileType}`;
+                    
+                    link.click();
+                    URL.revokeObjectURL(url);
+                }, `image/${fileType}`)
+            }
+        </script>
+    </body>
+</html>
